@@ -1,0 +1,375 @@
+# Campus Sphere - Complete Project Build Instructions
+
+## Project Overview
+Build "Campus Sphere" - an integrated campus management platform with live bus tracking, academic resources, alumni network, events, faculty directory, student communities, and clubs management.
+
+## Strict Tech Stack Requirements
+- **Frontend**: HTML, Tailwind CSS, JavaScript (vanilla)
+- **Backend**: Flask (Python)
+- **Database**: SQLAlchemy with SQLite
+- **Email**: Flask-Mail
+- **Maps**: OpenStreetMap with Leaflet.js API
+- **Authentication**: Cookie-based with tokens
+
+## Project Structure
+```
+campus-sphere/
+├── app.py
+├── models.py
+├── config.py
+├── requirements.txt
+├── database.db
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   ├── main.js
+│   │   ├── auth.js
+│   │   ├── dashboard.js
+│   │   ├── bus-tracking.js
+│   │   └── map.js
+│   └── images/
+├── templates/
+│   ├── base.html
+│   ├── login.html
+│   ├── signup.html
+│   ├── dashboard.html
+│   ├── profile.html
+│   ├── bus-tracking.html
+│   ├── map-view.html
+│   ├── driver.html
+│   ├── academic-resources.html
+│   ├── events.html
+│   ├── alumni.html
+│   ├── faculty.html
+│   ├── community.html
+│   ├── clubs.html
+│   └── admin/
+│       ├── admin-login.html
+│       └── admin-dashboard.html
+└── utils/
+    ├── auth.py
+    ├── email_utils.py
+    └── decorators.py
+```
+
+## Database Schema (SQLAlchemy Models)
+
+### 1. User Models
+```python
+# Temporary registration table
+class TempUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    email = db.Column(db.String(100), unique=True)
+    password_hash = db.Column(db.String(255))
+    verification_token = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime)  # 15 minutes from creation
+
+# Main user table
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    email = db.Column(db.String(100), unique=True)
+    password_hash = db.Column(db.String(255))
+    profile_image = db.Column(db.String(255))
+    course = db.Column(db.String(50))
+    branch = db.Column(db.String(50))
+    batch = db.Column(db.String(20))
+    year = db.Column(db.Integer)
+    selected_bus_id = db.Column(db.Integer, db.ForeignKey('bus.id'))
+    selected_stop = db.Column(db.String(100))
+    login_status = db.Column(db.Boolean, default=False)
+    session_token = db.Column(db.String(100))
+    last_login_device = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+```
+
+### 2. Bus Tracking Models
+```python
+class Bus(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bus_number = db.Column(db.String(20), unique=True)
+    route_description = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True)
+    current_lat = db.Column(db.Float)
+    current_lng = db.Column(db.Float)
+    last_updated = db.Column(db.DateTime)
+    driver_id = db.Column(db.Integer, db.ForeignKey('driver.id'))
+
+class BusStop(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bus_id = db.Column(db.Integer, db.ForeignKey('bus.id'))
+    stop_name = db.Column(db.String(100))
+    stop_order = db.Column(db.Integer)
+    lat = db.Column(db.Float)
+    lng = db.Column(db.Float)
+    is_crossed = db.Column(db.Boolean, default=False)
+
+class Driver(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    password_hash = db.Column(db.String(255))
+    assigned_bus = db.Column(db.Integer, db.ForeignKey('bus.id'))
+    is_sharing_location = db.Column(db.Boolean, default=False)
+```
+
+### 3. Academic Resources Models
+```python
+class AcademicResource(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    course = db.Column(db.String(50))
+    branch = db.Column(db.String(50))
+    year = db.Column(db.Integer)
+    subject = db.Column(db.String(100))
+    resource_type = db.Column(db.String(20))  # notes, syllabus, pyq
+    title = db.Column(db.String(200))
+    file_path = db.Column(db.String(255))
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+    views = db.Column(db.Integer, default=0)
+```
+
+### 4. Other Models (Events, Alumni, Faculty, Clubs, Community)
+```python
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200))
+    description = db.Column(db.Text)
+    event_date = db.Column(db.DateTime)
+    venue = db.Column(db.String(100))
+    registration_link = db.Column(db.String(255))
+    is_upcoming = db.Column(db.Boolean)
+    highlight_images = db.Column(db.Text)  # JSON string of image URLs
+
+class Alumni(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    batch = db.Column(db.String(20))
+    current_designation = db.Column(db.String(100))
+    company = db.Column(db.String(100))
+    linkedin_profile = db.Column(db.String(255))
+    email = db.Column(db.String(100))
+
+class Faculty(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    designation = db.Column(db.String(100))
+    department = db.Column(db.String(100))
+    subjects = db.Column(db.Text)  # JSON list
+    mobile = db.Column(db.String(15))
+    email = db.Column(db.String(100))
+    linkedin = db.Column(db.String(255))
+
+class Club(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    description = db.Column(db.Text)
+    club_type = db.Column(db.String(50))  # academic, non-academic
+    secretary_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+class ClubMembership(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    club_id = db.Column(db.Integer, db.ForeignKey('club.id'))
+    is_verified = db.Column(db.Boolean, default=False)
+    verified_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+class CommunityPost(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    content = db.Column(db.Text)
+    post_type = db.Column(db.String(50))  # hackathon, project, help, general
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    likes = db.Column(db.Integer, default=0)
+
+class Admin(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True)
+    password_hash = db.Column(db.String(255))
+    role = db.Column(db.String(20))  # master, clubs, buses, academics
+    permissions = db.Column(db.Text)  # JSON list of permissions
+```
+
+## Authentication System
+
+### Registration Flow
+1. User fills signup form (name, email, password, confirm password)
+2. Validate passwords match
+3. Store in TempUser table with verification token
+4. Send verification email using Flask-Mail
+5. If link clicked within 15 minutes, transfer to User table
+6. Auto-delete expired TempUser records
+
+### Login System
+```python
+# Cookie-based authentication
+def login():
+    # Check email and password
+    # If login_status is True, check device
+    # Option for force logout if different device
+    # Generate session token
+    # Set cookies: user_id, session_token
+    # Update login_status to True
+    
+def logout():
+    # Remove cookies
+    # Set login_status to False
+    # Clear session_token
+```
+
+## UI/UX Design Requirements
+
+### Color Scheme & Design
+```css
+/* Use vibrant gradients throughout */
+:root {
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --gradient-success: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Mobile-first responsive design */
+/* Smooth animations using CSS transitions and JavaScript */
+/* Glassmorphism effects for cards */
+/* Parallax scrolling for event highlights */
+```
+
+### Mobile-Responsive Layout
+- Hamburger menu for navigation
+- Touch-friendly buttons (min 44px)
+- Swipe gestures for navigation
+- Bottom navigation for quick access
+- Pull-to-refresh functionality
+
+### Interactive Elements
+1. **Loading animations**: Skeleton screens
+2. **Micro-interactions**: Button hover effects, form validations
+3. **Transitions**: Smooth page transitions, slide-in menus
+4. **Notifications**: Toast messages for actions
+5. **Progress indicators**: For file uploads, location tracking
+
+## Feature Implementation Details
+
+### 1. Dashboard
+```javascript
+// Dashboard structure
+- Collapsible side menu (animated slide)
+- Profile dropdown (top-right)
+- Widget cards with hover effects:
+  * Selected bus with real-time status
+  * Recent academic resources
+  * Club memberships
+  * Upcoming events
+  * Recent alumni contacts
+```
+
+### 2. Bus Tracking System
+```javascript
+// Map implementation using Leaflet
+const map = L.map('busMap').setView([latitude, longitude], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// Real-time location updates
+setInterval(updateBusLocation, 5000); // Update every 5 seconds
+
+// Stop progression visualization
+// Red color for crossed stops
+// Green for current position
+// Grey for upcoming stops
+```
+
+### 3. Driver Interface
+```html
+<!-- Simple driver panel -->
+- Bus selection dropdown
+- Start/Stop location sharing button
+- Status indicator
+- Auto GPS fetch using navigator.geolocation
+```
+
+### 4. Academic Resources
+- Filter by: Course, Branch, Year, Subject
+- Card layout for resources
+- Download counters
+- Recently viewed section
+- Search functionality
+
+### 5. Events Page
+- Timeline view for upcoming events
+- Gallery carousel for past events
+- Registration forms
+- Countdown timers
+- Social sharing options
+
+### 6. Alumni Network
+- Card-based profiles
+- LinkedIn integration buttons
+- Filter by batch, company
+- Contact request system
+
+### 7. Student Community
+```javascript
+// Profanity filter
+const bannedWords = ['list', 'of', 'inappropriate', 'words'];
+function filterContent(text) {
+    // Implement word filtering
+    return cleanText;
+}
+```
+
+### 8. Admin Panel
+- Master admin: Full access
+- Role-based admins: Specific module access
+- CRUD operations for all entities
+- Analytics dashboard
+- Bulk operations support
+
+## Security Measures
+1. Password hashing using werkzeug.security
+2. CSRF protection
+3. SQL injection prevention via SQLAlchemy
+4. XSS protection
+5. Rate limiting for API endpoints
+6. Secure cookie flags (HttpOnly, Secure)
+
+## Performance Optimizations
+1. Lazy loading for images
+2. Pagination for lists
+3. Caching static resources
+4. Database indexing
+5. Minified CSS/JS in production
+6. Compressed images
+
+## Deployment Configuration
+```python
+# config.py
+class Config:
+    SECRET_KEY = 'generate-random-secret-key'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = 'your-email@gmail.com'
+    MAIL_PASSWORD = 'app-specific-password'
+```
+
+## Additional Features
+1. PWA support for mobile app-like experience
+2. Push notifications for bus arrival
+3. Dark mode toggle
+4. Multi-language support (future)
+5. Export functionality for academic resources
+6. QR code for event check-ins
+
+## Testing Requirements
+1. Unit tests for all models
+2. Integration tests for auth flow
+3. UI testing for responsive design
+4. Load testing for concurrent users
+5. Security testing for vulnerabilities
+
+Build this complete system ensuring all features are fully functional, the UI is highly interactive with smooth animations, and the mobile experience is seamless. Use vibrant gradients and modern design patterns throughout. Ensure the code is clean, well-commented, and follows best practices.
