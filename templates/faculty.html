@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Directory - Campus Sphere{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Faculty Directory</h1>
+            <a href="{{ url_for('dashboard') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Back</a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for member in faculty %}
+            <div class="glass-card rounded-xl p-6 card-hover">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ member.name }}</h3>
+                <p class="text-sm text-gray-600 mb-4">{{ member.designation }}</p>
+                <div class="space-y-2 text-sm text-gray-600 mb-4">
+                    <p><strong>Department:</strong> {{ member.department }}</p>
+                    {% if member.mobile %}
+                    <p><strong>Mobile:</strong> {{ member.mobile }}</p>
+                    {% endif %}
+                    {% if member.email %}
+                    <p><strong>Email:</strong> {{ member.email }}</p>
+                    {% endif %}
+                </div>
+                {% if member.linkedin %}
+                <a href="{{ member.linkedin }}" target="_blank" class="inline-block px-4 py-2 gradient-bg-accent text-white rounded-lg hover:shadow-lg transition text-sm">
+                    LinkedIn
+                </a>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="col-span-full text-center text-gray-600">No faculty profiles available</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Events - Campus Sphere{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Campus Events</h1>
+            <a href="{{ url_for('dashboard') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Back</a>
+        </div>
+
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Upcoming Events</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for event in upcoming_events %}
+                <div class="glass-card rounded-xl p-6 card-hover">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ event.title }}</h3>
+                    <p class="text-gray-600 mb-4">{{ event.description[:100] }}...</p>
+                    <div class="space-y-2 text-sm text-gray-600 mb-4">
+                        <p>📅 {{ event.event_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        <p>📍 {{ event.venue }}</p>
+                    </div>
+                    {% if event.registration_link %}
+                    <a href="{{ event.registration_link }}" target="_blank" class="inline-block px-4 py-2 gradient-bg-success text-white rounded-lg hover:shadow-lg transition">
+                        Register Now
+                    </a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="col-span-full text-center text-gray-600">No upcoming events</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Past Events</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for event in past_events %}
+                <div class="glass-card rounded-xl p-6 card-hover">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ event.title }}</h3>
+                    <p class="text-gray-600 mb-2">{{ event.description[:100] }}...</p>
+                    <p class="text-sm text-gray-500">{{ event.event_date.strftime('%B %d, %Y') }}</p>
+                </div>
+                {% else %}
+                <p class="col-span-full text-center text-gray-600">No past events</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

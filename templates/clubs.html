@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Clubs - Campus Sphere{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Campus Clubs</h1>
+            <a href="{{ url_for('dashboard') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Back</a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for club in clubs %}
+            <div class="glass-card rounded-xl p-6 card-hover">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ club.name }}</h3>
+                <p class="text-gray-600 mb-4">{{ club.description }}</p>
+                <div class="space-y-2 text-sm text-gray-600 mb-4">
+                    <p><strong>Type:</strong> {{ club.club_type }}</p>
+                    {% if club.secretary %}
+                    <p><strong>Secretary:</strong> {{ club.secretary.name }}</p>
+                    {% endif %}
+                </div>
+                <button onclick="joinClub({{ club.id }})" class="btn-primary text-sm">
+                    Join Club
+                </button>
+            </div>
+            {% else %}
+            <p class="col-span-full text-center text-gray-600">No clubs available</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function joinClub(clubId) {
+    fetch(`/club/${clubId}/join`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+}
+</script>
+{% endblock %}
