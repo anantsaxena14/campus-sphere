@@ -2,107 +2,47 @@
 
 {% block title %}Dashboard - Campus Sphere{% endblock %}
 
+{% block header_title %}Dashboard{% endblock %}
+
 {% block content %}
-<div class="flex h-screen bg-gradient-to-br from-purple-50 to-blue-50">
-    <aside id="sidebar" class="sidebar w-64 bg-white shadow-xl h-full overflow-y-auto">
-        <div class="p-6 gradient-bg-primary">
-            <h2 class="text-2xl font-bold text-white">Campus Sphere</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="glass-card rounded-xl p-6 card-hover">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">My Bus</h3>
+        {% if user.selected_bus %}
+        <div class="space-y-2">
+            <p class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Bus {{ user.selected_bus.bus_number }}</p>
+            <p class="text-sm text-gray-600">Stop: {{ user.selected_stop or 'Not selected' }}</p>
+            <a href="{{ url_for('bus_tracking') }}" class="inline-block mt-4 px-4 py-2 gradient-bg-accent text-white rounded-lg hover:shadow-lg transition">Track Bus</a>
         </div>
-        
-        <nav class="p-4 space-y-2">
-            <a href="{{ url_for('dashboard') }}" class="flex items-center px-4 py-3 text-gray-700 bg-purple-100 rounded-lg hover:bg-purple-200 transition">
-                <span class="ml-3">Dashboard</span>
-            </a>
-            <a href="{{ url_for('bus_tracking') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
-                <span class="ml-3">Bus Tracking</span>
-            </a>
-            <a href="{{ url_for('academic_resources') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
-                <span class="ml-3">Academic Resources</span>
-            </a>
-            <a href="{{ url_for('events') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
-                <span class="ml-3">Events</span>
-            </a>
-            <a href="{{ url_for('alumni') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
-                <span class="ml-3">Alumni Network</span>
-            </a>
-            <a href="{{ url_for('faculty') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
-                <span class="ml-3">Faculty Directory</span>
-            </a>
-            <a href="{{ url_for('community') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
-                <span class="ml-3">Community</span>
-            </a>
-            <a href="{{ url_for('clubs') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
-                <span class="ml-3">Clubs</span>
-            </a>
-            <a href="{{ url_for('profile') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
-                <span class="ml-3">Profile</span>
-            </a>
-        </nav>
-    </aside>
+        {% else %}
+        <p class="text-gray-600">No bus selected</p>
+        <a href="{{ url_for('bus_tracking') }}" class="inline-block mt-4 px-4 py-2 gradient-bg-primary text-white rounded-lg hover:shadow-lg transition">Select Bus</a>
+        {% endif %}
+    </div>
 
-    <div class="flex-1 flex flex-col overflow-hidden">
-        <header class="bg-white shadow-md p-4 flex justify-between items-center">
-            <button id="sidebar-toggle" class="md:hidden text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
-            </button>
-            
-            <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-            
-            <div class="relative">
-                <button id="profile-dropdown-btn" class="flex items-center space-x-2 focus:outline-none">
-                    <div class="w-10 h-10 rounded-full gradient-bg-primary flex items-center justify-center text-white font-bold">
-                        {{ user.name[0].upper() }}
-                    </div>
-                </button>
-                <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
-                    <a href="{{ url_for('profile') }}" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Profile</a>
-                    <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Logout</a>
-                </div>
-            </div>
-        </header>
+    <div class="glass-card rounded-xl p-6 card-hover">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">My Clubs</h3>
+        <p class="text-2xl font-bold text-purple-600">{{ user.club_memberships|length }}</p>
+        <p class="text-sm text-gray-600">Active memberships</p>
+        <a href="{{ url_for('clubs') }}" class="inline-block mt-4 px-4 py-2 gradient-bg-secondary text-white rounded-lg hover:shadow-lg transition">View Clubs</a>
+    </div>
 
-        <main class="flex-1 overflow-y-auto p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="glass-card rounded-xl p-6 card-hover">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">My Bus</h3>
-                    {% if user.selected_bus %}
-                    <div class="space-y-2">
-                        <p class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Bus {{ user.selected_bus.bus_number }}</p>
-                        <p class="text-sm text-gray-600">Stop: {{ user.selected_stop or 'Not selected' }}</p>
-                        <a href="{{ url_for('bus_tracking') }}" class="inline-block mt-4 px-4 py-2 gradient-bg-accent text-white rounded-lg hover:shadow-lg transition">Track Bus</a>
-                    </div>
-                    {% else %}
-                    <p class="text-gray-600">No bus selected</p>
-                    <a href="{{ url_for('bus_tracking') }}" class="inline-block mt-4 px-4 py-2 gradient-bg-primary text-white rounded-lg hover:shadow-lg transition">Select Bus</a>
-                    {% endif %}
-                </div>
-
-                <div class="glass-card rounded-xl p-6 card-hover">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">My Clubs</h3>
-                    <p class="text-2xl font-bold text-purple-600">{{ user.club_memberships|length }}</p>
-                    <p class="text-sm text-gray-600">Active memberships</p>
-                    <a href="{{ url_for('clubs') }}" class="inline-block mt-4 px-4 py-2 gradient-bg-secondary text-white rounded-lg hover:shadow-lg transition">View Clubs</a>
-                </div>
-
-                <div class="glass-card rounded-xl p-6 card-hover">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Upcoming Events</h3>
-                    <p class="text-2xl font-bold text-blue-600">{{ upcoming_events_count }}</p>
-                    <p class="text-sm text-gray-600">This month</p>
-                    <a href="{{ url_for('events') }}" class="inline-block mt-4 px-4 py-2 gradient-bg-warning text-white rounded-lg hover:shadow-lg transition">View Events</a>
-                </div>
-            </div>
-
-            <div class="mt-8 glass-card rounded-xl p-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">Recent Activity</h3>
-                <div class="space-y-3">
-                    <p class="text-gray-600">Welcome to Campus Sphere! Complete your profile to get started.</p>
-                </div>
-            </div>
-        </main>
+    <div class="glass-card rounded-xl p-6 card-hover">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Upcoming Events</h3>
+        <p class="text-2xl font-bold text-blue-600">{{ upcoming_events_count }}</p>
+        <p class="text-sm text-gray-600">This month</p>
+        <a href="{{ url_for('events') }}" class="inline-block mt-4 px-4 py-2 gradient-bg-warning text-white rounded-lg hover:shadow-lg transition">View Events</a>
     </div>
 </div>
 
+<div class="mt-8 glass-card rounded-xl p-6">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4">Recent Activity</h3>
+    <div class="space-y-3">
+        <p class="text-gray-600">Welcome to Campus Sphere! Complete your profile to get started.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

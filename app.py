@@ -137,11 +137,36 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    # Get current user from cookie
     user_id = request.cookies.get('user_id')
     user = User.query.get(user_id)
-    upcoming_events_count = Event.query.filter_by(is_upcoming=True).count()
-    
-    return render_template('dashboard.html', user=user, upcoming_events_count=upcoming_events_count)
+
+    # Count upcoming events (event_date in the future)
+    upcoming_events_count = Event.query.filter(Event.event_date >= datetime.utcnow()).count()
+
+    # Optional: Fetch highlighted event for banner/top section
+    highlighted_event = Event.query.filter_by(is_highlighted=True).first()
+
+    # Optional: Fetch recent past events for highlight section
+    past_events = (
+        Event.query
+        .filter(Event.event_date < datetime.utcnow())
+        .order_by(Event.event_date.desc())
+        .limit(5)
+        .all()
+    )
+
+    # Optional: You can also categorize events by type for filtering
+    event_types = db.session.query(Event.event_type).distinct().all()
+
+    return render_template(
+        'dashboard.html',
+        user=user,
+        upcoming_events_count=upcoming_events_count,
+        highlighted_event=highlighted_event,
+        past_events=past_events,
+        event_types=[etype[0] for etype in event_types if etype[0]]  # flatten tuple list
+    )
 
 @app.route('/profile')
 @login_required
@@ -271,11 +296,33 @@ def driver_logout():
     response.delete_cookie('driver_token')
     return response
 
+
 @app.route('/academic-resources')
 @login_required
 def academic_resources():
-    resources = AcademicResource.query.all()
-    return render_template('academic-resources.html', resources=resources)
+    user_id = request.cookies.get('user_id')
+    user = User.query.get(user_id)
+    # Query the database for a list of unique subjects
+    # The 'subject' field is what we want to display on the cards
+    # Use SQLAlchemy's distinct() method to get unique values
+    subjects = [s[0] for s in db.session.query(AcademicResource.subject).distinct()]
+    print(subjects)
+    # Render the template and pass the list of unique subjects
+    return render_template('academic-resources.html', subjects=subjects, user=user)
+
+
+@app.route('/academic-resources/<string:subject_name>')
+@login_required
+def subject_resources(subject_name):
+    user_id = request.cookies.get('user_id')
+    user = User.query.get(user_id)
+    # This is the new route for the sub-page
+    # Query all resources that match the given subject name
+    resources = AcademicResource.query.filter_by(subject=subject_name).all()
+    print(resources)
+
+    # You'll need to create a new template for this page, e.g., 'subject-resources.html'
+    return render_template('subject-resources.html', resources=resources, subject_name=subject_name, user=user)
 
 @app.route('/download-resource/<int:resource_id>')
 @login_required
@@ -292,31 +339,77 @@ def download_resource(resource_id):
         flash(f'Error downloading resource: {str(e)}', 'error')
         return redirect(url_for('academic_resources'))
 
+
 @app.route('/events')
 @login_required
 def events():
+    user_id = request.cookies.get('user_id')
+    user = User.query.get(user_id)
     now = datetime.utcnow()
-    upcoming_events = Event.query.filter(Event.event_date >= now).order_by(Event.event_date).all()
-    past_events = Event.query.filter(Event.event_date < now).order_by(Event.event_date.desc()).all()
-    return render_template('events.html', upcoming_events=upcoming_events, past_events=past_events)
 
+    # 1. Query for the single highlighted upcoming event
+    highlighted_event = Event.query.filter(
+        Event.is_highlighted == True,
+        Event.event_date >= now
+    ).order_by(Event.event_date).first()
+
+    # 2. Query for all other upcoming events, excluding the highlighted one
+    upcoming_events = Event.query.filter(
+        Event.event_date >= now,
+        Event.id != highlighted_event.id if highlighted_event else None
+    ).order_by(Event.event_date).all()
+
+    # 3. Query for past events, ordered by most recent
+    past_events = Event.query.filter(Event.event_date < now).order_by(Event.event_date.desc()).all()
+
+    # user = User.query.get(request.cookies.get('user_id'))
+    # The user object can be passed if needed, but the template doesn't use it directly from the old code.
+
+    return render_template(
+        'events.html',
+        highlighted_event=highlighted_event,
+        upcoming_events=upcoming_events,
+        past_events=past_events,
+        user=user
+    )
 @app.route('/alumni')
 @login_required
 def alumni():
+    user_id = request.cookies.get('user_id')
+    user = User.query.get(user_id)
     alumni_list = Alumni.query.all()
-    return render_template('alumni.html', alumni=alumni_list)
+    return render_template('alumni.html', alumni=alumni_list, user=user)
 
 @app.route('/faculty')
 @login_required
 def faculty():
+    user_id = request.cookies.get('user_id')
+    user = User.query.get(user_id)
     faculty_list = Faculty.query.all()
-    return render_template('faculty.html', faculty=faculty_list)
+    return render_template('faculty.html', faculty=faculty_list, user=user)
+
+
+@app.route('/faculty/<int:faculty_id>')
+@login_required
+def faculty_profile(faculty_id):
+    # Query the database for a single faculty member by ID
+    faculty_member = Faculty.query.get_or_404(faculty_id)
+
+    # You'll need to pass the timetable data as well.
+    # Assuming you have a Timetable model linked to Faculty.
+    # Example: timetable = Timetable.query.filter_by(faculty_id=faculty_id).all()
+    # If not, you'll need to add a Timetable model to your database.
+
+    # Render the new profile template
+    return render_template('faculty-profile.html', faculty=faculty_member)
 
 @app.route('/community')
 @login_required
 def community():
+    user_id = request.cookies.get('user_id')
+    user = User.query.get(user_id)
     posts = CommunityPost.query.order_by(CommunityPost.created_at.desc()).all()
-    return render_template('community.html', posts=posts)
+    return render_template('community.html', posts=posts, user=user)
 
 @app.route('/create-post', methods=['POST'])
 @login_required
@@ -351,12 +444,30 @@ def like_post(post_id):
     db.session.commit()
     return jsonify({'likes': post.likes})
 
+
 @app.route('/clubs')
 @login_required
 def clubs():
-    clubs_list = Club.query.all()
-    return render_template('clubs.html', clubs=clubs_list)
+    # 1. Get the current user ID for join status check
+    user_id = request.cookies.get('user_id')
+    user = User.query.get(user_id)
 
+    # 2. Eagerly load the memberships and secretary data for performance (N+1 fix)
+    clubs_list = Club.query.options(
+        db.joinedload(Club.memberships),
+        db.joinedload(Club.secretary)
+    ).all()
+
+    # 3. Create a set of club IDs the user is already a member of (for front-end logic)
+    user_club_ids = {m.club_id for m in user.club_memberships} if user and user.club_memberships else set()
+
+    return render_template(
+        'clubs.html',
+        clubs=clubs_list,
+        current_user_id=user.id if user else None,
+        user_club_ids=user_club_ids,
+        user=user
+    )
 @app.route('/club/<int:club_id>/join', methods=['POST'])
 @login_required
 def join_club(club_id):

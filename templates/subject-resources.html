@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subject_name }} Resources - UniConnect{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">{{ subject_name }}</h1>
+            <div class="flex space-x-2">
+                <button data-type="Notes" class="filter-btn px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">Notes</button>
+                <button data-type="Syllabus" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">Syllabus</button>
+                <button data-type="Pyqs" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">PYQs</button>
+            </div>
+        </div>
+
+        <div id="resources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for resource in resources %}
+            <div class="glass-card rounded-xl p-6 card-hover resource-card" data-type="{{ resource.resource_type }}">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ resource.title }}</h3>
+                <div class="space-y-1 text-sm text-gray-600 mb-4">
+                    <p>Subject: {{ resource.subject }}</p>
+                    <p>Type: {{ resource.resource_type }}</p>
+                </div>
+                <a href="{{ url_for('download_resource', resource_id=resource.id) }}" class="inline-block px-4 py-2 gradient-bg-primary text-white rounded-lg hover:shadow-lg transition">
+                    Download
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <p id="no-resources" class="hidden col-span-full text-center text-gray-600 mt-8">No resources of this type available</p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const resourceCards = document.querySelectorAll('.resource-card');
+        const noResourcesMessage = document.getElementById('no-resources');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove 'active' state from all buttons
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('bg-purple-500', 'text-white');
+                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                });
+
+                // Add 'active' state to the clicked button
+                button.classList.add('bg-purple-500', 'text-white');
+                button.classList.remove('bg-gray-200', 'text-gray-700');
+
+                const type = button.dataset.type;
+                let foundResources = false;
+
+                // Iterate through all resource cards and show/hide based on the filter
+                resourceCards.forEach(card => {
+                    if (card.dataset.type === type) {
+                        card.style.display = 'block';
+                        foundResources = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Show or hide the "No resources" message
+                if (foundResources) {
+                    noResourcesMessage.classList.add('hidden');
+                } else {
+                    noResourcesMessage.classList.remove('hidden');
+                }
+            });
+        });
+
+        // Set 'Notes' as the default active button and filter
+        document.querySelector('.filter-btn[data-type="Notes"]').click();
+    });
+</script>
+{% endblock %}
