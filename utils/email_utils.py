@@ -35,3 +35,18 @@ def send_verification_email(mail, user_email, verification_token, user_name):
     except Exception as e:
         print(f"Error sending email: {e}")
         return False
+
+def send_force_logout_email(mail, email, token, name):
+    logout_link = url_for('force_logout_verify', token=token, _external=True)
+    msg = Message('Force Logout Request', recipients=[email])
+    msg.body = f'''
+Hello {name},
+
+You requested to logout your account from all active devices.
+
+Click the link below to confirm logout (valid for 15 minutes):
+{logout_link}
+
+If you didn’t request this, please ignore this email.
+'''
+    mail.send(msg)
