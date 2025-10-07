@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Community - Campus Sphere{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Student Community</h1>
+            <a href="{{ url_for('dashboard') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Back</a>
+        </div>
+
+        <div class="glass-card rounded-xl p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Create a Post</h3>
+            <form method="POST" action="{{ url_for('create_post') }}">
+                <textarea name="content" rows="4" placeholder="Share your thoughts, hackathons, projects, or ask for help..." required
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-600 mb-4"></textarea>
+                <div class="flex gap-4">
+                    <select name="post_type" class="px-4 py-2 rounded-lg border border-gray-300">
+                        <option value="general">General</option>
+                        <option value="hackathon">Hackathon</option>
+                        <option value="project">Project</option>
+                        <option value="help">Help</option>
+                    </select>
+                    <button type="submit" class="btn-primary">Post</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="space-y-4">
+            {% for post in posts %}
+            <div class="glass-card rounded-xl p-6 card-hover">
+                <div class="flex items-start space-x-4">
+                    <div class="w-12 h-12 rounded-full gradient-bg-primary flex items-center justify-center text-white font-bold">
+                        {{ post.author.name[0].upper() }}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-gray-800">{{ post.author.name }}</h4>
+                            <span class="text-sm text-gray-500">{{ post.created_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+                        <p class="text-gray-700 mb-3">{{ post.content }}</p>
+                        <div class="flex items-center gap-4">
+                            <span class="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-sm">{{ post.post_type }}</span>
+                            <button onclick="likePost({{ post.id }})" class="flex items-center gap-1 text-gray-600 hover:text-purple-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                <span>{{ post.likes }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-center text-gray-600">No posts yet. Be the first to share something!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function likePost(postId) {
+    fetch(`/post/${postId}/like`, { method: 'POST' })
+        .then(() => location.reload());
+}
+</script>
+{% endblock %}

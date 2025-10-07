@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Event Highlights - UniConnect{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        {% if highlighted_event %}
+        <div class="glass-card rounded-xl p-8 mb-8 text-center">
+            <h2 class="text-4xl font-bold text-gray-800 mb-2">{{ highlighted_event.title }}</h2>
+            <p class="text-xl text-gray-600 mb-6">{{ highlighted_event.description }}</p>
+
+            <div class="flex items-center justify-center space-x-4 text-gray-600 mb-6">
+                <p>📅 {{ highlighted_event.event_date.strftime('%b %d, %Y') }}</p>
+                <p>⏰ {{ highlighted_event.event_date.strftime('%I:%M %p') }}</p>
+                <p>📍 {{ highlighted_event.venue }}</p>
+            </div>
+
+            <div class="countdown-timer flex justify-center space-x-4 mb-6" data-event-date="{{ highlighted_event.event_date.isoformat() }}">
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-purple-600 days">00</div>
+                    <div class="text-xs text-gray-500">Days</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-purple-600 hours">00</div>
+                    <div class="text-xs text-gray-500">Hours</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-purple-600 minutes">00</div>
+                    <div class="text-xs text-gray-500">Minutes</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-purple-600 seconds">00</div>
+                    <div class="text-xs text-gray-500">Seconds</div>
+                </div>
+            </div>
+
+            <a href="{{ highlighted_event.registration_link }}" class="inline-block px-8 py-3 bg-purple-600 text-white font-semibold rounded-full hover:bg-purple-700 transition-transform transform hover:scale-105">
+                Register Now
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4 mb-8">
+            <input type="text" placeholder="Search for events" class="w-full md:w-auto flex-1 p-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <select class="p-4 rounded-xl border border-gray-300">
+                <option value="">Department/Club</option>
+                <option>CSE</option>
+                <option>ECE</option>
+                <option>ACM Club</option>
+            </select>
+            <select class="p-4 rounded-xl border border-gray-300">
+                <option value="">Event Type</option>
+                <option>Workshop</option>
+                <option>Seminar</option>
+                <option>Cultural</option>
+            </select>
+        </div>
+
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Upcoming Events</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {% for event in upcoming_events %}
+            <div class="glass-card rounded-xl p-6 card-hover">
+                <div class="space-y-2 text-sm text-gray-600 mb-4">
+                    <p>📅 {{ event.event_date.strftime('%B %d, %Y') }}</p>
+                    <p>⏰ {{ event.event_date.strftime('%I:%M %p') }}</p>
+                    <p>📍 {{ event.venue }}</p>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ event.title }}</h3>
+                <p class="text-gray-600 mb-4">{{ event.description[:100] }}...</p>
+                {% if event.registration_link %}
+                <a href="{{ event.registration_link }}" target="_blank" class="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg hover:shadow-lg transition">
+                    Register
+                </a>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="col-span-full text-center text-gray-600">No upcoming events</p>
+            {% endfor %}
+        </div>
+
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Past Event Highlights</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for event in past_events %}
+            <div class="glass-card rounded-xl p-2 card-hover">
+                {% if event.highlight_images %}
+                <img src="{{ event.highlight_images }}" alt="{{ event.title }}" class="w-full h-48 object-cover rounded-lg mb-4">
+                {% endif %}
+                <div class="p-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ event.title }}</h3>
+                    <p class="text-sm text-gray-600 mb-2">{{ event.description[:100] }}...</p>
+                    <p class="text-xs text-gray-500">{{ event.event_date.strftime('%b %d, %Y') }}</p>
+                    <a href="#" class="inline-block mt-4 px-4 py-2 gradient-bg-primary text-white rounded-lg hover:shadow-lg transition">View Gallery</a>
+                </div>
+            </div>
+            {% else %}
+            <p class="col-span-full text-center text-gray-600">No past events to highlight.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Countdown Timer Logic
+    document.addEventListener('DOMContentLoaded', () => {
+        const countdownElement = document.querySelector('.countdown-timer');
+        if (countdownElement) {
+            const eventDate = new Date(countdownElement.dataset.eventDate);
+            const updateCountdown = () => {
+                const now = new Date().getTime();
+                const distance = eventDate - now;
+
+                if (distance < 0) {
+                    countdownElement.innerHTML = '<span class="text-lg text-gray-500">Event has started!</span>';
+                    return;
+                }
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                countdownElement.querySelector('.days').textContent = days < 10 ? '0' + days : days;
+                countdownElement.querySelector('.hours').textContent = hours < 10 ? '0' + hours : hours;
+                countdownElement.querySelector('.minutes').textContent = minutes < 10 ? '0' + minutes : minutes;
+                countdownElement.querySelector('.seconds').textContent = seconds < 10 ? '0' + seconds : seconds;
+            };
+
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        }
+    });
+</script>
+{% endblock %}

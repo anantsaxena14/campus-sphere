@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Clubs Dashboard - UniConnect{% endblock %}
+
+{% block header_title %}Explore Campus Clubs{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Search Bar -->
+        <div class="relative w-full md:w-1/2 mb-8">
+            <input type="text" id="club-search" placeholder="Search for clubs by name or type..." class="w-full p-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 pl-12">
+            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+
+        <!-- Academic Clubs Section -->
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Academic Clubs</h2>
+        <div id="academic-clubs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+            {% set academic_clubs = clubs | selectattr('club_type', '==', 'Academic') | list %}
+            {% for club in academic_clubs %}
+            {% set is_member = club.id in user_club_ids %}
+            <a href="#" class="club-card glass-card rounded-xl p-6 flex flex-col items-center text-center card-hover transition duration-200" data-club-type="Academic" data-club-name="{{ club.name }}">
+                <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                    <!-- Icon Placeholder: Using a simple code tag for academic clubs -->
+                    <span class="text-3xl text-purple-600 font-mono">
+                        {% if club.name.startswith('Computer') %} &lt;/&gt;
+                        {% elif club.name.startswith('Debate') %} 🗣️
+                        {% elif club.name.startswith('Physics') %} ⚛️
+                        {% else %} 📚
+                        {% endif %}
+                    </span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">{{ club.name }}</h3>
+                <p class="text-sm text-gray-600 h-10 overflow-hidden mb-4">{{ club.description[:60] }}...</p>
+
+                <div class="text-xs text-gray-500 mt-auto mb-2">{{ club.memberships|length }} members</div>
+
+                {% if is_member %}
+                <button class="px-4 py-2 bg-green-500 text-white rounded-lg cursor-default transition text-sm">
+                    Joined
+                </button>
+                {% else %}
+                <button onclick="handleClubAction(event, {{ club.id }}, 'Academic')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:shadow-lg transition text-sm">
+                    View More
+                </button>
+                {% endif %}
+            </a>
+            {% endfor %}
+            {% if not academic_clubs %}
+            <p class="col-span-full text-center text-gray-600">No academic clubs available.</p>
+            {% endif %}
+        </div>
+
+        <!-- Non-Academic Clubs Section -->
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Non-Academic Clubs</h2>
+        <div id="non-academic-clubs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% set non_academic_clubs = clubs | selectattr('club_type', '==', 'Non-Academic') | list %}
+            {% for club in non_academic_clubs %}
+            {% set is_member = club.id in user_club_ids %}
+            <a href="#" class="club-card glass-card rounded-xl p-6 flex flex-col items-center text-center card-hover transition duration-200" data-club-type="Non-Academic" data-club-name="{{ club.name }}">
+                <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                    <!-- Icon placeholder: Using Emojis for non-academic clubs -->
+                    <span class="text-3xl text-purple-600">
+                        {% if club.name.startswith('Photo') %} 📸
+                        {% elif club.name.startswith('Hiking') %} ⛰️
+                        {% elif club.name.startswith('Gaming') %} 🎮
+                        {% else %} ✨
+                        {% endif %}
+                    </span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">{{ club.name }}</h3>
+                <p class="text-sm text-gray-600 h-10 overflow-hidden mb-4">{{ club.description[:60] }}...</p>
+
+                <div class="text-xs text-gray-500 mt-auto mb-2">{{ club.memberships|length }} members</div>
+
+                {% if is_member %}
+                <button class="px-4 py-2 bg-green-500 text-white rounded-lg cursor-default transition text-sm">
+                    Joined
+                </button>
+                {% else %}
+                <button onclick="handleClubAction(event, {{ club.id }}, 'Non-Academic')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:shadow-lg transition text-sm">
+                    Join Now
+                </button>
+                {% endif %}
+            </a>
+            {% endfor %}
+            {% if not non_academic_clubs %}
+            <p class="col-span-full text-center text-gray-600">No non-academic clubs available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Custom function to handle button clicks (Join or View More)
+    function handleClubAction(event, clubId, clubType) {
+        // Prevent the link (<a> tag) from navigating when the button is clicked
+        event.stopPropagation();
+        event.preventDefault();
+
+        if (clubType === 'Academic') {
+            // For Academic Clubs, just show an alert or redirect to a detailed view (if implemented)
+            // For now, let's keep the join logic for Non-Academic as per the image's "Join Now" button presence.
+            console.log(`Viewing details for club ID: ${clubId}`);
+            // window.location.href = `/clubs/${clubId}/details`; // Uncomment this if you build a details page
+        } else {
+            // Non-Academic clubs allow joining
+            joinClub(clubId);
+        }
+    }
+
+    // Function to handle the actual AJAX call to join the club
+    function joinClub(clubId) {
+        fetch(`/club/${clubId}/join`, { method: 'POST' })
+            .then(response => {
+                if (!response.ok) {
+                    // Check for a JSON response on error if possible
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || 'Failed to join club.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // IMPORTANT: Use a custom UI element instead of alert()
+                alert(data.message || 'Successfully requested to join club!');
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error joining club:', error);
+                // IMPORTANT: Use a custom UI element instead of alert()
+                alert(error.message || 'An error occurred. Please try again.');
+            });
+    }
+
+    // --- Search Logic (Client-Side Filtering) ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('club-search');
+        const clubCards = document.querySelectorAll('.club-card');
+
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.toLowerCase();
+
+            clubCards.forEach(card => {
+                const clubName = card.dataset.clubName.toLowerCase();
+                const clubType = card.dataset.clubType.toLowerCase();
+
+                // Show card if the query matches name OR type
+                if (clubName.includes(query) || clubType.includes(query)) {
+                    card.style.display = ''; // Show
+                } else {
+                    card.style.display = 'none'; // Hide
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

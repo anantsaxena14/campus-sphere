@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Teacher - Campus Sphere</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <style>
+        .mode-normal {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .mode-practice {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .mode-counseling {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .chat-container {
+            height: calc(100vh - 200px);
+        }
+        .pulse-ring {
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 1; }
+            80%, 100% { transform: scale(1.4); opacity: 0; }
+        }
+        .message-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .avatar-container {
+            min-height: 400px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app" class="min-h-screen">
+        <header class="mode-normal text-white py-6 px-8 transition-all duration-500" id="header">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">AI Virtual Teacher</h1>
+                    <p class="text-sm opacity-90 mt-1">Hello, {{ user.name }}! I'm here to help you learn.</p>
+                </div>
+                <a href="/dashboard" class="bg-white text-purple-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition">
+                    Back to Dashboard
+                </a>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Select Learning Mode</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="switchMode('normal')" 
+                        class="mode-btn p-6 rounded-xl bg-gradient-to-r from-purple-500 to-purple-700 text-white hover:shadow-xl transition transform hover:scale-105">
+                        <div class="text-3xl mb-2">🧠</div>
+                        <h3 class="font-bold text-lg">Normal Chat</h3>
+                        <p class="text-sm opacity-90 mt-2">Ask me anything!</p>
+                    </button>
+                    <button onclick="switchMode('practice')" 
+                        class="mode-btn p-6 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 text-white hover:shadow-xl transition transform hover:scale-105">
+                        <div class="text-3xl mb-2">🧩</div>
+                        <h3 class="font-bold text-lg">Practice Mode</h3>
+                        <p class="text-sm opacity-90 mt-2">Test your skills</p>
+                    </button>
+                    <button onclick="switchMode('counseling')" 
+                        class="mode-btn p-6 rounded-xl bg-gradient-to-r from-blue-400 to-cyan-400 text-white hover:shadow-xl transition transform hover:scale-105">
+                        <div class="text-3xl mb-2">💬</div>
+                        <h3 class="font-bold text-lg">Counseling Mode</h3>
+                        <p class="text-sm opacity-90 mt-2">Get guidance & support</p>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-col">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Chat Interface</h3>
+                    <div id="chatMessages" class="chat-container overflow-y-auto mb-4 space-y-3 flex-1">
+                        <div class="text-center text-gray-500 py-8">
+                            <p>👋 Welcome! Select a mode above and start chatting.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 items-center">
+                        <input type="text" id="messageInput" 
+                            placeholder="Type your message..." 
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            onkeypress="if(event.key === 'Enter') sendMessage()">
+                        <button onclick="toggleVoice()" id="voiceBtn" 
+                            class="p-3 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
+                            🎤
+                        </button>
+                        <button onclick="sendMessage()" 
+                            class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                            Send
+                        </button>
+                    </div>
+                    <div class="mt-2 flex items-center gap-2">
+                        <label class="flex items-center gap-2 text-sm text-gray-600">
+                            <input type="checkbox" id="soundToggle" checked class="rounded">
+                            Enable Voice Output
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Virtual Teacher</h3>
+                    <div class="avatar-container flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl">
+                        <model-viewer
+                            src="https://modelviewer.dev/shared-assets/models/RobotExpressive.glb"
+                            alt="AI Teacher Avatar"
+                            auto-rotate
+                            camera-controls
+                            style="width: 100%; height: 400px;"
+                            exposure="0.8">
+                        </model-viewer>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <p id="avatarStatus" class="text-sm text-gray-600">Ready to help you learn!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/ai-teacher.js"></script>
+</body>
+</html>

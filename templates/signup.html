@@ -1,0 +1,110 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Sign Up - Campushelp{% endblock %}
+
+{% block content %}
+<style>
+    /* CSS for the shake animation */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-5px); }
+        40%, 80% { transform: translateX(5px); }
+    }
+    .animate-shake {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+</style>
+
+<div id="main-container" class="opacity-0 transition-opacity duration-1000 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl flex overflow-hidden">
+
+        <div class="relative w-2/5 p-10 text-white flex flex-col justify-center items-center rounded-l-lg"
+             style="background-image: linear-gradient(135deg, #7c3aed, #a855f7);">
+            <div class="absolute top-0 left-0 w-24 h-24 bg-white bg-opacity-10 rounded-full -m-10"></div>
+            <div class="absolute bottom-0 right-0 w-48 h-48 bg-white bg-opacity-10 rounded-full -m-20"></div>
+            <h1 class="text-3xl font-semibold mb-2 z-10">Welcome to Campushelp</h1>
+            <p class="text-center z-10">Your one-stop solution for campus life.</p>
+        </div>
+
+        <div class="w-3/5 p-10 relative">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Create Account</h2>
+
+            <form method="POST" action="{{ url_for('signup') }}" id="signup-form" class="space-y-4">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <input type="text" id="name" name="name" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all duration-300 transform focus:scale-105">
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                    <input type="email" id="email" name="email" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all duration-300 transform focus:scale-105">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" name="password" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all duration-300 transform focus:scale-105">
+                </div>
+
+                <div>
+                    <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all duration-300 transform focus:scale-105">
+                </div>
+
+                <div id="password-error" class="hidden text-red-600 text-sm"></div>
+
+                <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-md font-semibold hover:bg-purple-700 transition-all duration-200 transform hover:scale-105">
+                    Create Account
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">Already have an account?
+                    <a href="{{ url_for('login') }}" class="text-purple-600 font-semibold hover:underline">Login</a>
+                </p>
+                <p class="mt-4 text-xs text-center text-gray-400">
+                    By continuing, you agree to our <a href="#" class="text-purple-600 hover:underline">Privacy Policy</a> and <a href="#" class="text-purple-600 hover:underline">Terms of Service</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mainContainer = document.getElementById('main-container');
+    if (mainContainer) {
+        // Trigger the fade-in animation by removing the initial opacity class
+        mainContainer.classList.remove('opacity-0');
+    }
+
+    // Form submission validation
+    document.getElementById('signup-form').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        const errorDiv = document.getElementById('password-error');
+
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            errorDiv.textContent = 'Passwords do not match';
+            errorDiv.classList.remove('hidden');
+
+            // Add the shake class to trigger the animation
+            document.getElementById('password').classList.add('animate-shake');
+            document.getElementById('confirm_password').classList.add('animate-shake');
+
+            // Remove the shake class after the animation is done
+            setTimeout(() => {
+                document.getElementById('password').classList.remove('animate-shake');
+                document.getElementById('confirm_password').classList.remove('animate-shake');
+            }, 500);
+        } else {
+            errorDiv.classList.add('hidden');
+        }
+    });
+});
+</script>
+{% endblock %}

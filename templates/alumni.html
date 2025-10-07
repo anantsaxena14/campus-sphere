@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Alumni Network - Campus Sphere{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Alumni Network</h1>
+            <a href="{{ url_for('dashboard') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Back</a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for alumnus in alumni %}
+            <div class="glass-card rounded-xl p-6 card-hover">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-16 h-16 rounded-full gradient-bg-primary flex items-center justify-center text-white text-2xl font-bold">
+                        {{ alumnus.name[0].upper() }}
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">{{ alumnus.name }}</h3>
+                        <p class="text-sm text-gray-600">Batch {{ alumnus.batch }}</p>
+                    </div>
+                </div>
+                <div class="space-y-2 text-sm text-gray-600">
+                    <p><strong>{{ alumnus.current_designation }}</strong></p>
+                    <p>{{ alumnus.company }}</p>
+                </div>
+                <div class="mt-4 flex gap-2">
+                    {% if alumnus.linkedin_profile %}
+                    <a href="{{ alumnus.linkedin_profile }}" target="_blank" class="px-4 py-2 gradient-bg-accent text-white rounded-lg hover:shadow-lg transition text-sm">
+                        LinkedIn
+                    </a>
+                    {% endif %}
+                    {% if alumnus.email %}
+                    <a href="mailto:{{ alumnus.email }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">
+                        Email
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <p class="col-span-full text-center text-gray-600">No alumni profiles available</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

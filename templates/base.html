@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Campus Sphere{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-container" class="fixed top-4 right-4 z-50 space-y-2">
+                {% for category, message in messages %}
+                <div class="flash-message bg-white border-l-4 {% if category == 'success' %}border-green-500{% elif category == 'error' %}border-red-500{% elif category == 'warning' %}border-yellow-500{% else %}border-blue-500{% endif %} rounded-lg shadow-lg p-4 min-w-[300px] transform transition-all duration-300 animate-slide-in">
+                    <div class="flex items-center justify-between">
+                        <p class="text-gray-800">{{ message }}</p>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="flex h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+        <aside id="sidebar" class="sidebar w-64 bg-white shadow-xl h-full overflow-y-auto">
+            <div class="p-6 gradient-bg-primary">
+                <h2 class="text-2xl font-bold text-white">Campus Sphere</h2>
+            </div>
+
+            <nav class="p-4 space-y-2">
+                <a href="{{ url_for('dashboard') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+                    <span class="ml-3">Dashboard</span>
+                </a>
+                <a href="{{ url_for('bus_tracking') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+                    <span class="ml-3">Bus Tracking</span>
+                </a>
+                <a href="{{ url_for('academic_resources') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+                    <span class="ml-3">Academic Resources</span>
+                </a>
+                <a href="{{ url_for('events') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+                    <span class="ml-3">Events</span>
+                </a>
+                <a href="{{ url_for('alumni') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+                    <span class="ml-3">Alumni Network</span>
+                </a>
+                <a href="{{ url_for('faculty') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+                    <span class="ml-3">Faculty Directory</span>
+                </a>
+                <a href="{{ url_for('community') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+                    <span class="ml-3">Community</span>
+                </a>
+                <a href="{{ url_for('clubs') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+                    <span class="ml-3">Clubs</span>
+                </a>
+                <a href="{{ url_for('profile') }}" class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+                    <span class="ml-3">Profile</span>
+                </a>
+            </nav>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-md p-4 flex justify-between items-center">
+                <button id="sidebar-toggle" class="md:hidden text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <h1 class="text-2xl font-bold text-gray-800">{% block header_title %}{% endblock %}</h1>
+                <div class="relative">
+                    <button id="profile-dropdown-btn" class="flex items-center space-x-2 focus:outline-none">
+                        <div class="w-10 h-10 rounded-full gradient-bg-primary flex items-center justify-center text-white font-bold">
+                            {{ user.name[0].upper() }}
+                        </div>
+                    </button>
+                    <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
+                        <a href="{{ url_for('profile') }}" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Profile</a>
+                        <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Logout</a>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
